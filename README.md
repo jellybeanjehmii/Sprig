@@ -2,7 +2,7 @@
 
 A web app that scores packaged food from 0–100 on how processed it is, explains every deduction, suggests cleaner alternatives from the same aisle, and warns about ingredients on your personal intolerance list.
 
-**Live:** https://jellybeanjehmii.github.io/sprig/
+**Live:** https://jellybeanjehmii.github.io/Sprig/
 
 ## Features
 - Barcode scanning: live camera, barcode photo, or manual entry
