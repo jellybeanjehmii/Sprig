@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sprig — Clean Food Scanner</title>
+<meta name="theme-color" content="#1f3d2b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f1e7; --card:#fffdf8; --ink:#1d2a22; --muted:#6b7468; --line:#e6dfcf;
+  --green:#1f3d2b; --leaf:#3f7d4f; --mint:#e3efe2;
+  --poor:#d64545; --mediocre:#e8892b; --good:#8cbf3f; --excellent:#2e9e5b;
+  --r:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(84px + env(safe-area-inset-bottom)) env(safe-area-inset-left)}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;margin:0;letter-spacing:-.01em}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:560px;margin:0 auto;padding:18px 18px 24px}
+header.top{display:flex;align-items:center;gap:10px;padding:6px 0 18px}
+.logo{width:36px;height:36px;border-radius:11px;background:var(--green);display:grid;place-items:center}
+.brand{font-family:Fraunces,serif;font-size:24px;font-weight:700;color:var(--green)}
+.pill{margin-left:auto;font-size:12px;padding:5px 10px;border-radius:99px;background:var(--mint);color:var(--leaf);font-weight:500}
+.pill.off{background:#f6e6d3;color:#9a5b17}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.hero{background:var(--green);color:#f3efe3;border:none;position:relative;overflow:hidden}
+.hero h2{font-size:28px;line-height:1.1;margin-bottom:8px}
+.hero p{margin:0 0 16px;color:#c9d6c8;font-size:15px}
+.hero svg.deco{position:absolute;right:-30px;top:-20px;opacity:.12}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:14px;padding:14px 16px;font-weight:700;font-size:16px}
+.btn.primary{background:#f3efe3;color:var(--green)}
+.btn.solid{background:var(--green);color:#fff}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.hero .btn.ghost{border-color:#45624f;color:#f3efe3}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.mt{margin-top:10px}
+label.lbl{font-size:13px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px}
+input[type=text],textarea,select{width:100%;font:inherit;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+textarea{min-height:110px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--leaf)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:8px 12px;font-size:14px}
+.chip:hover{border-color:var(--leaf)}
+.sec-title{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:22px 4px 10px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.hidden{display:none!important}
+
+/* result */
+.res-head{display:flex;gap:16px;align-items:center}
+.ring{flex:none;position:relative;width:118px;height:118px}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .num b{font-family:Fraunces,serif;font-size:38px;line-height:1;display:block}
+.ring .num span{font-size:12px;color:var(--muted)}
+.band{display:inline-block;padding:4px 10px;border-radius:99px;font-size:13px;font-weight:700;color:#fff;margin-top:6px}
+.pname{font-size:22px;line-height:1.15}
+.pbrand{color:var(--muted);font-size:14px;margin-top:4px}
+.flag{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line);align-items:flex-start}
+.flag:first-child{border-top:none;padding-top:0}
+.dot{flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px}
+.flag .t{font-weight:700}
+.flag .d{font-size:14px;color:var(--muted);margin-top:2px;line-height:1.4}
+.flag .imp{margin-left:auto;font-weight:700;font-size:14px;white-space:nowrap}
+.ingr{font-size:14px;line-height:1.55;color:#3c4a40}
+.ingr mark{background:#fde3d7;color:#8f2d14;border-radius:4px;padding:0 2px}
+.ingr mark.s{background:#fff0c7;color:#7a5800}
+.ingr mark.o{background:#ffe2c2;color:#8a4a00}
+.alt{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff;margin-bottom:10px;width:100%;text-align:left}
+.alt:hover{border-color:var(--leaf)}
+.mini{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-family:Fraunces,serif;font-size:18px}
+.alt .n{font-weight:700;font-size:15px}
+.alt .b{font-size:13px;color:var(--muted)}
+.thumb{flex:none;width:46px;height:46px;border-radius:10px;object-fit:cover;background:var(--mint)}
+.back{background:none;border:none;color:var(--leaf);font-weight:700;padding:0 0 14px;display:flex;align-items:center;gap:6px}
+.hist{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);width:100%;background:none;border-left:none;border-right:none;border-bottom:none;text-align:left}
+.hist:first-child{border-top:none}
+.empty{text-align:center;padding:30px 10px;color:var(--muted)}
+.notice{background:#fff7e8;border:1px solid #f0d9ae;color:#7a5410;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.45;margin-bottom:14px}
+.notice.err{background:#fdeceb;border-color:#f3c3bf;color:#8f2d26}
+.spinner{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--leaf);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;gap:12px;align-items:center;justify-content:center;padding:26px;color:var(--muted)}
+table.rules{width:100%;border-collapse:collapse;font-size:14px}
+table.rules td{padding:9px 0;border-top:1px solid var(--line);vertical-align:top}
+table.rules td:last-child{text-align:right;font-weight:700;white-space:nowrap;padding-left:10px}
+.ingr mark.a{background:#e9ddff;color:#4b2a91;font-weight:700}
+.alert{border-radius:var(--r);padding:14px 16px;margin-bottom:14px;border:1px solid}
+.alert h4{margin:0 0 6px;font-size:16px;display:flex;align-items:center;gap:8px}
+.alert .li{font-size:14px;line-height:1.45;margin-top:4px}
+.alert.bad{background:#fdeceb;border-color:#f3c3bf;color:#7d231c}
+.alert.may{background:#fff4e2;border-color:#f0d6a8;color:#7a4d08}
+.alert.ok{background:var(--mint);border-color:#c8dfc6;color:#24543a}
+.alert .fine{font-size:12px;opacity:.8;margin-top:8px}
+.setup{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-size:14px}
+.tchip{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:9px 14px;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.tchip.on{background:var(--green);border-color:var(--green);color:#fff}
+.tchip .ck{display:none}.tchip.on .ck{display:inline}
+.tag-may{display:inline-block;font-size:11px;font-weight:700;color:#7a4d08;background:#fff4e2;border-radius:6px;padding:2px 6px;margin-top:3px}
+.tag-bad{color:var(--poor);font-weight:700}
+.bandkey{display:flex;gap:6px;margin-top:10px}
+.bandkey div{flex:1;text-align:center;font-size:12px;color:#fff;border-radius:8px;padding:6px 2px;font-weight:700}
+
+/* nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(255,253,248,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:center;padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:20}
+nav.tabs .in{display:flex;max-width:560px;width:100%}
+nav.tabs button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--muted);padding:4px}
+nav.tabs button.on{color:var(--green);font-weight:700}
+nav.tabs svg{width:24px;height:24px}
+
+/* scanner overlay */
+.overlay{position:fixed;inset:0;background:#0d1410;z-index:50;display:flex;flex-direction:column}
+.overlay video{flex:1;width:100%;object-fit:cover;min-height:0}
+.reticle{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);width:76%;max-width:380px;aspect-ratio:2/1;border:3px solid #f3efe3;border-radius:18px;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+.reticle::after{content:"";position:absolute;left:8%;right:8%;top:50%;height:2px;background:#7fd18f;animation:scan 1.6s ease-in-out infinite}
+@keyframes scan{0%,100%{transform:translateY(-30px)}50%{transform:translateY(30px)}}
+.ov-bar{padding:18px 18px calc(18px + env(safe-area-inset-bottom));background:#0d1410;color:#f3efe3;text-align:center}
+.ov-bar p{margin:0 0 12px;color:#b9c6b8}
+.modal-bg{position:fixed;inset:0;background:rgba(15,25,18,.5);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--card);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+.modal h3{font-size:22px;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21V11" stroke="#f3efe3" stroke-width="2" stroke-linecap="round"/><path d="M12 13C12 8 8.5 5 4 5c0 4.5 3 8 8 8Z" fill="#9fd4a6"/><path d="M12 11c0-4 3-7 8-7 0 4-3 7-8 7Z" fill="#f3efe3"/></svg></div>
+    <div class="brand">Sprig</div>
+    <div id="netPill" class="pill">Checking…</div>
+  </header>
+
+  <!-- SCAN VIEW -->
+  <section id="view-scan">
+    <div class="card hero">
+      <svg class="deco" width="220" height="220" viewBox="0 0 24 24"><path d="M12 13C12 8 8.5 5 4 5c0 4.5 3 8 8 8Z" fill="#fff"/><path d="M12 11c0-4 3-7 8-7 0 4-3 7-8 7Z" fill="#fff"/></svg>
+      <h2>How processed is it, really?</h2>
+      <p>Scan a barcode to get a 0–100 score. Every flag is explained, and you'll see cleaner options from the same aisle.</p>
+      <button class="btn primary" id="btnCamera">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M15 8v8M18 8v8"/></svg>
+        Scan barcode
+      </button>
+      <div class="row mt">
+        <button class="btn ghost" id="btnBarcodePhoto">Barcode photo</button>
+        <button class="btn ghost" id="btnLabel">Ingredients label</button>
+      </div>
+      <input type="file" id="fileBarcode" accept="image/*" capture="environment" class="hidden">
+    </div>
+
+    <button class="card setup" id="profileSummary"></button>
+
+    <div class="card">
+      <label class="lbl" for="codeInput">Or type the barcode number</label>
+      <form id="codeForm" class="row">
+        <input type="text" id="codeInput" inputmode="numeric" placeholder="e.g. 5000159407236" autocomplete="off">
+        <button class="btn solid" style="flex:0 0 auto;width:auto" type="submit">Look up</button>
+      </form>
+    </div>
+
+    <div class="sec-title">Try a demo product</div>
+    <div class="chips" id="demoChips"></div>
+
+    <div class="sec-title">Recent</div>
+    <div class="card" id="recentBox"></div>
+  </section>
+
+  <!-- RESULT VIEW -->
+  <section id="view-result" class="hidden">
+    <button class="back" id="btnBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>Back</button>
+    <div id="resultBody"></div>
+  </section>
+
+  <!-- HISTORY VIEW -->
+  <section id="view-history" class="hidden">
+    <h2 style="font-size:28px;margin-bottom:14px">History</h2>
+    <div class="card" id="historyBox"></div>
+    <button class="btn ghost" id="btnClear">Clear history</button>
+  </section>
+
+  <!-- PROFILE VIEW -->
+  <section id="view-profile" class="hidden">
+    <h2 style="font-size:28px;margin-bottom:6px">My intolerances</h2>
+    <p class="muted" style="margin-top:0">Pick what you avoid. Every product gets checked against this list and shows a warning if it matches. Your list is saved on this device only.</p>
+    <div class="sec-title">Allergens</div>
+    <div class="chips" id="chipsA"></div>
+    <div class="sec-title">Intolerances &amp; sensitivities</div>
+    <div class="chips" id="chipsI"></div>
+    <div class="card small muted" style="margin-top:20px">Sprig checks each product's declared allergens and "may contain" warnings, then scans the ingredient list for hidden names: whey and casein for dairy, malt and spelt for gluten, and so on. The data is crowd-sourced and recipes change, so if you have a serious allergy, always check the pack itself.</div>
+  </section>
+
+  <!-- ABOUT VIEW -->
+  <section id="view-about" class="hidden">
+    <h2 style="font-size:28px;margin-bottom:6px">How scoring works</h2>
+    <p class="muted" style="margin-top:0">Every product starts at 100. Points come off for signs of ultra-processing, and every deduction appears on the result screen with its reason. There are no hidden weights, and no brand can pay to change a score.</p>
+    <div class="card">
+      <h3 style="font-size:18px;margin-bottom:8px">Deductions</h3>
+      <table class="rules">
+        <tr><td><b>Processing level (NOVA)</b><br><span class="muted">Group 4 ultra-processed / 3 processed / 2 culinary ingredient</span></td><td>−30 / −10 / −3</td></tr>
+        <tr><td><b>Additives</b><br><span class="muted">Rated high, moderate or low concern, depending on the research behind each one</span></td><td>−15 / −8 / −2 each</td></tr>
+        <tr><td><b>Hydrogenated fats</b><br><span class="muted">A source of trans fats</span></td><td>−15</td></tr>
+        <tr><td><b>Refined seed oils</b><br><span class="muted">Sunflower, rapeseed/canola, soybean, corn, cottonseed and similar</span></td><td>−12, then −5 each</td></tr>
+        <tr><td><b>Palm oil</b></td><td>−6</td></tr>
+        <tr><td><b>Added sugars</b><br><span class="muted">Sugar, syrups, dextrose, maltodextrin and similar. A further −8 if sugars exceed 22.5 g per 100 g</span></td><td>−10, then −4 each</td></tr>
+        <tr><td><b>Ultra-processing markers</b><br><span class="muted">Flavourings, modified starch, protein isolates, emulsifiers and similar</span></td><td>−5 each (max −25)</td></tr>
+        <tr><td><b>Long ingredient list</b></td><td>−5 (11+) / −10 (21+)</td></tr>
+        <tr><td><b>Contaminant watch</b><br><span class="muted">Category-level risks: arsenic in rice, mercury in large fish, pesticides in non-organic high-residue crops, microplastics from plastic packaging</span></td><td>−2 to −4</td></tr>
+        <tr><td><b>Certified organic</b></td><td>+4</td></tr>
+      </table>
+      <div class="bandkey">
+        <div style="background:var(--poor)">0–24 Poor</div>
+        <div style="background:var(--mediocre)">25–49 Mediocre</div>
+        <div style="background:var(--good)">50–74 Good</div>
+        <div style="background:var(--excellent)">75–100 Excellent</div>
+      </div>
+    </div>
+    <div class="card small muted">
+      Product data comes from <a href="https://world.openfoodfacts.org" style="color:var(--leaf)">Open Food Facts</a>, a free, crowd-sourced database. The contaminant flags reflect general risks for a food category, not lab tests of a specific product. This app gives general information, not medical advice.
+    </div>
+    <div class="card">
+      <label class="lbl" for="countrySel">Find alternatives from shops in</label>
+      <select id="countrySel">
+        <option value="">Any country</option>
+        <option value="en:united-kingdom">United Kingdom</option>
+        <option value="en:ireland">Ireland</option>
+        <option value="en:united-states">United States</option>
+        <option value="en:canada">Canada</option>
+        <option value="en:australia">Australia</option>
+        <option value="en:new-zealand">New Zealand</option>
+      </select>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs"><div class="in">
+  <button data-tab="scan" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M15 8v8"/></svg>Scan</button>
+  <button data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>History</button>
+  <button data-tab="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>My list</button>
+  <button data-tab="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Scoring</button>
+</div></nav>
+
+<!-- camera overlay -->
+<div class="overlay hidden" id="scanOverlay">
+  <video id="video" playsinline muted></video>
+  <div class="reticle"></div>
+  <div class="ov-bar">
+    <p id="scanHint">Line up the barcode inside the frame</p>
+    <button class="btn primary" id="btnStopScan">Cancel</button>
+  </div>
+</div>
+
+<!-- label modal -->
+<div class="modal-bg hidden" id="labelModal">
+  <div class="modal">
+    <h3>Score from the label</h3>
+    <p class="muted small" style="margin-top:0">Is the product missing from the database? Take a photo of its ingredients list, or paste the ingredients below.</p>
+    <button class="btn solid" id="btnLabelPhoto">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Photo of ingredients
+    </button>
+    <input type="file" id="fileLabel" accept="image/*" capture="environment" class="hidden">
+    <div id="labelStatus" class="small muted mt"></div>
+    <div class="mt">
+      <label class="lbl" for="lblName">Product name (optional)</label>
+      <input type="text" id="lblName" placeholder="e.g. Chocolate chip cookies">
+    </div>
+    <div class="mt">
+      <label class="lbl" for="lblText">Ingredients</label>
+      <textarea id="lblText" placeholder="Wheat flour, sugar, palm oil, cocoa…"></textarea>
+    </div>
+    <div class="row mt">
+      <button class="btn ghost" id="btnLabelCancel">Cancel</button>
+      <button class="btn solid" id="btnLabelScore">Calculate score</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------------- utilities ---------------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const loadScript = (() => { const cache = {}; return src => cache[src] ||= new Promise((res, rej) => {
+  const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => { delete cache[src]; rej(new Error("Could not load " + src)); };
+  document.head.appendChild(s);
+}); })();
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error("timeout")), ms))]);
+
+/* ---------------- scoring engine ---------------- */
+// Additive concern table: level h=high (-15), m=moderate (-8), l=low (-2), 0=benign
+const ADD = {
+  e102:["h","Tartrazine","Azo dye linked to hyperactivity in children (one of the 'Southampton six')."],
+  e104:["h","Quinoline yellow","Synthetic dye linked to hyperactivity in children."],
+  e110:["h","Sunset yellow","Azo dye linked to hyperactivity in children."],
+  e122:["h","Carmoisine","Azo dye linked to hyperactivity in children."],
+  e124:["h","Ponceau 4R","Azo dye linked to hyperactivity in children."],
+  e129:["h","Allura red","Azo dye linked to hyperactivity in children."],
+  e127:["h","Erythrosine","Synthetic dye with thyroid concerns."],
+  e133:["m","Brilliant blue","Synthetic dye."],
+  e171:["h","Titanium dioxide","Banned as a food additive in the EU since 2022 over genotoxicity concerns."],
+  e150c:["m","Ammonia caramel","Can contain 4-MEI, a possible carcinogen."],
+  e150d:["m","Sulphite ammonia caramel","Can contain 4-MEI, a possible carcinogen."],
+  e211:["m","Sodium benzoate","Can form benzene alongside vitamin C, and is linked to hyperactivity."],
+  e210:["m","Benzoic acid","Preservative that some people are sensitive to."],
+  e220:["m","Sulphur dioxide","Sulphite that can trigger asthma in sensitive people."],
+  e221:["m","Sodium sulphite","A sulphite."], e223:["m","Sodium metabisulphite","A sulphite."], e224:["m","Potassium metabisulphite","A sulphite."], e228:["m","Potassium bisulphite","A sulphite."],
+  e249:["h","Potassium nitrite","Curing agent that can form carcinogenic nitrosamines."],
+  e250:["h","Sodium nitrite","Curing agent that can form carcinogenic nitrosamines."],
+  e251:["h","Sodium nitrate","Curing agent that converts to nitrite."],
+  e252:["h","Potassium nitrate","Curing agent that converts to nitrite."],
+  e320:["h","BHA","Synthetic antioxidant classed as a possible carcinogen."],
+  e321:["h","BHT","Synthetic antioxidant with unresolved safety questions."],
+  e319:["h","TBHQ","Synthetic antioxidant with immune-system concerns."],
+  e338:["m","Phosphoric acid","Phosphate additive, associated with lower bone density in cola drinkers."],
+  e339:["m","Sodium phosphates","Added phosphates."], e340:["m","Potassium phosphates","Added phosphates."], e341:["m","Calcium phosphates","Added phosphates."],
+  e450:["m","Diphosphates","Added phosphates."], e451:["m","Triphosphates","Added phosphates."], e452:["m","Polyphosphates","Added phosphates."],
+  e385:["m","Calcium disodium EDTA","Synthetic chelating agent."], e386:["m","Disodium EDTA","Synthetic chelating agent."],
+  e407:["h","Carrageenan","Thickener linked to gut inflammation in studies."],
+  e433:["h","Polysorbate 80","Emulsifier shown to disrupt gut bacteria in studies."],
+  e466:["h","Carboxymethylcellulose","Emulsifier shown to disrupt gut bacteria in studies."],
+  e471:["m","Mono- and diglycerides","Emulsifier associated with cardiovascular risk in the NutriNet-Santé study."],
+  e472e:["m","DATEM","Emulsifier."], e476:["m","PGPR","Emulsifier used to replace cocoa butter."],
+  e481:["m","Sodium stearoyl lactylate","Emulsifier."], e482:["m","Calcium stearoyl lactylate","Emulsifier."],
+  e621:["m","Monosodium glutamate","Flavour enhancer that is a common marker of ultra-processing."],
+  e627:["m","Disodium guanylate","Flavour enhancer."], e631:["m","Disodium inosinate","Flavour enhancer."], e635:["m","Disodium ribonucleotides","Flavour enhancer."],
+  e950:["h","Acesulfame K","Artificial sweetener linked to cardiovascular risk in observational studies."],
+  e951:["h","Aspartame","Artificial sweetener classed by IARC as possibly carcinogenic (2B)."],
+  e954:["h","Saccharin","Artificial sweetener."],
+  e955:["h","Sucralose","Artificial sweetener with gut-microbiome concerns."],
+  e962:["h","Aspartame-acesulfame salt","Artificial sweetener."],
+  e960:["l","Steviol glycosides","Plant-derived sweetener."], e965:["l","Maltitol","Sugar alcohol, laxative in large amounts."], e967:["l","Xylitol","Sugar alcohol."], e420:["l","Sorbitol","Sugar alcohol, laxative in large amounts."],
+  e1422:["l","Modified starch","Chemically modified starch."], e1442:["l","Modified starch","Chemically modified starch."], e1450:["l","Modified starch","Chemically modified starch."],
+  e412:["l","Guar gum","Thickener."], e415:["l","Xanthan gum","Thickener."], e414:["l","Gum arabic","Thickener."], e410:["l","Locust bean gum","Thickener."], e460:["l","Cellulose","Bulking agent."], e464:["l","HPMC","Thickener."],
+  e551:["l","Silicon dioxide","Anti-caking agent."], e202:["l","Potassium sorbate","Preservative."], e200:["l","Sorbic acid","Preservative."],
+  e322:["l","Lecithins","Emulsifier."], e330:["l","Citric acid","Acidity regulator."], e160c:["l","Paprika extract","Colouring."], e150a:["l","Plain caramel","Colouring."],
+  e300:["0","Ascorbic acid","Vitamin C."], e301:["0","Sodium ascorbate","Vitamin C."], e306:["0","Tocopherols","Vitamin E."], e307:["0","Alpha-tocopherol","Vitamin E."], e392:["0","Rosemary extract","Natural antioxidant."],
+  e440:["0","Pectin","Natural fruit fibre."], e270:["0","Lactic acid","Natural acid."], e290:["0","Carbon dioxide","Carbonation."], e500:["0","Sodium bicarbonate","Baking soda."], e503:["0","Ammonium carbonates","Raising agent."],
+  e160a:["0","Carotenes","Natural colouring."], e100:["0","Curcumin","Turmeric colouring."], e162:["0","Beetroot red","Natural colouring."], e331:["0","Sodium citrates","Acidity regulator."], e332:["0","Potassium citrates","Acidity regulator."], e170:["0","Calcium carbonate","Mineral."], e260:["0","Acetic acid","Vinegar."], e296:["0","Malic acid","Fruit acid."], e334:["0","Tartaric acid","Fruit acid."], e509:["0","Calcium chloride","Mineral salt."], e516:["0","Calcium sulphate","Mineral salt."],
+};
+const PEN = {h:15, m:8, l:2, "0":0};
+// named additives that appear in ingredient text without E-numbers
+const NAMED_ADD = [
+  [/\baspartame\b/,"e951"],[/\bsucralose\b/,"e955"],[/\bacesulfame/,"e950"],[/\bsaccharin\b/,"e954"],
+  [/\bcarrageenan\b/,"e407"],[/\bpolysorbate\s*80\b/,"e433"],[/\bcarboxymethyl\s*cellulose|cellulose gum\b/,"e466"],
+  [/\bmono-? ?and di-?glycerides|mono- and diglycerides of fatty acids/,"e471"],[/\bsodium nitrite\b/,"e250"],[/\bpotassium nitrite\b/,"e249"],[/\bsodium nitrate\b/,"e251"],
+  [/\bsodium benzoate\b/,"e211"],[/\bpotassium sorbate\b/,"e202"],[/\bmonosodium glutamate|\bmsg\b/,"e621"],[/\btitanium dioxide\b/,"e171"],
+  [/\bphosphoric acid\b/,"e338"],[/\bbha\b|butylated hydroxyanisole/,"e320"],[/\bbht\b|butylated hydroxytoluene/,"e321"],[/\btbhq\b/,"e319"],
+  [/\bxanthan gum\b/,"e415"],[/\bguar gum\b/,"e412"],[/\bsoy(a)? lecithin|sunflower lecithin|\blecithin\b/,"e322"],[/\bcitric acid\b/,"e330"],
+  [/\bcaramel colou?r\b/,"e150d"],[/\bred 40\b|allura red/,"e129"],[/\byellow 5\b|tartrazine/,"e102"],[/\byellow 6\b|sunset yellow/,"e110"],[/\bblue 1\b|brilliant blue/,"e133"],
+  [/\bdisodium guanylate\b/,"e627"],[/\bdisodium inosinate\b/,"e631"],[/\bsodium stearoyl lactylate\b/,"e481"],[/\bdatem\b/,"e472e"],[/\bdisodium edta|calcium disodium edta/,"e385"],
+];
+const SEED_OILS = [
+  ["sunflower",/\bsunflower (seed )?oil\b/],["rapeseed",/\brapeseed oil\b/],["canola",/\bcanola oil\b/],["soybean",/\bsoy(a|bean)? ?(bean )?oil\b/],
+  ["corn",/\b(corn|maize) oil\b/],["cottonseed",/\bcottonseed oil\b/],["safflower",/\bsafflower oil\b/],["grapeseed",/\bgrape ?seed oil\b/],
+  ["rice bran",/\brice bran oil\b/],["vegetable oil",/\bvegetable oils?\b/],["peanut (refined)",/\b(refined )?(peanut|groundnut) oil\b/],
+];
+const SUGARS = [
+  "high fructose corn syrup","glucose-fructose syrup","fructose-glucose syrup","glucose syrup","corn syrup","rice syrup","golden syrup","invert sugar syrup","invert sugar",
+  "brown sugar","cane sugar","caster sugar","icing sugar","sugar","dextrose","maltodextrin","fructose","glucose","sucrose","maltose","molasses","treacle",
+  "agave syrup","agave","barley malt extract","malt extract","caramelised sugar","coconut sugar","date syrup","maple syrup","honey"
+];
+const UPF = [
+  ["Flavourings",/\b(natural |artificial )?flavou?rings?\b|\bnatural flavou?rs?\b|\bartificial flavou?rs?\b/],
+  ["Modified starch",/\bmodified (maize |corn |tapioca |potato |wheat )?starch\b/],
+  ["Hydrolysed protein",/\bhydroly[sz]ed\b/],
+  ["Protein isolate",/\bprotein isolate\b/],
+  ["Emulsifiers",/\bemulsifiers?\b/],
+  ["Thickeners / stabilisers",/\b(thickeners?|stabili[sz]ers?|gelling agent)\b/],
+  ["Flavour enhancers",/\bflavou?r enhancers?\b/],
+  ["Sweeteners",/\bsweeteners?\b/],
+  ["Colourings",/\bcolou?rs?\b(?! of)|\bcolou?rings?\b/],
+  ["Humectants",/\bhumectants?\b/],
+  ["Anti-caking agents",/\banti-?caking\b/],
+  ["Glazing agents",/\bglazing agents?\b/],
+  ["Interesterified fat",/\binteresterified\b/],
+];
+const DIRTY = ["strawberr","spinach","kale","collard","grape","peach","pear","nectarine","apple","bell pepper","cherr","blueberr","green bean"];
+const BIG_FISH = /\b(tuna|swordfish|king mackerel|marlin|shark|tilefish)\b/;
+
+function splitIngredients(t){
+  const out = []; let depth = 0, cur = "";
+  for (const ch of t){ if ("([".includes(ch)) depth++; if (")]".includes(ch)) depth = Math.max(0, depth-1);
+    if ((ch === "," || ch === ";") && depth === 0){ if (cur.trim()) out.push(cur.trim()); cur = ""; } else cur += ch; }
+  if (cur.trim()) out.push(cur.trim().replace(/\.$/, ""));
+  return out;
+}
+
+function scoreProduct(p){
+  const raw = splitMay(p.ingredients || "")[0].trim();
+  const t = " " + raw.toLowerCase().replace(/_/g, "").replace(/\s+/g, " ") + " ";
+  const flags = []; let score = 100;
+  const add = (title, detail, pts, sev, kind) => { if (pts === 0 && sev !== "info" && sev !== "plus") return; flags.push({title, detail, pts, sev, kind}); score += pts; };
+
+  if (!raw && !(p.additives||[]).length){
+    return { score:null, flags:[], insufficient:true };
+  }
+
+  // --- additives (tags from DB + E-numbers in text + named) ---
+  const found = new Set((p.additives || []).map(a => a.replace(/^en:/, "").toLowerCase()));
+  (t.match(/\be ?\d{3,4}[a-f]?\b/g) || []).forEach(m => found.add(m.replace(/\s/g, "")));
+  NAMED_ADD.forEach(([re, code]) => { if (re.test(t)) found.add(code); });
+  // collapse sub-variants like e450i -> e450
+  const codes = [...new Set([...found].map(c => ADD[c] ? c : (ADD[c.replace(/[ivx]+$/,"")] ? c.replace(/[ivx]+$/,"") : c)))];
+  let addTotal = 0; const addItems = [];
+  codes.sort().forEach(c => {
+    const a = ADD[c];
+    if (a){ const pen = PEN[a[0]]; if (pen){ addItems.push({c, lvl:a[0], name:a[1], why:a[2], pen}); addTotal += pen; } }
+    else if (/^e\d/.test(c)) { addItems.push({c, lvl:"u", name:"Unrated additive", why:"Not yet rated in Sprig's additive table.", pen:4}); addTotal += 4; }
+  });
+  addTotal = Math.min(addTotal, 50);
+  const sevOrder = {h:0,m:1,u:2,l:3};
+  addItems.sort((a,b) => sevOrder[a.lvl]-sevOrder[b.lvl]).forEach(a => {
+    add(`${a.c.toUpperCase()} · ${a.name}`, a.why, -a.pen, a.lvl === "h" ? "high" : a.lvl === "m" || a.lvl === "u" ? "med" : "low", "additive");
+  });
+  if (addItems.reduce((s,a)=>s+a.pen,0) > 50){ const refund = addItems.reduce((s,a)=>s+a.pen,0) - 50; score += refund; flags.push({title:"Additive cap applied", detail:`Additive deductions are capped at −50 (${refund} points returned).`, pts:refund, sev:"info", kind:"note"}); }
+
+  // --- hydrogenated ---
+  if (/\b(partially )?hydrogenated\b/.test(t)) add("Hydrogenated fat", "Hydrogenation creates trans fats, which are strongly linked to heart disease.", -15, "high", "fat");
+
+  // --- seed oils ---
+  const oils = SEED_OILS.filter(([,re]) => re.test(t)).map(([n]) => n);
+  if (oils.length) add(`Refined seed oil${oils.length>1?"s":""}: ${oils.join(", ")}`, "Industrially refined oils that are high in omega-6. They are a hallmark of ultra-processed food.", -(12 + 5*(oils.length-1)), "high", "oil");
+  if (/\bpalm (kernel )?(oil|fat)\b/.test(t)) add("Palm oil", "A refined fat that is high in saturated fat, with environmental concerns.", -6, "med", "oil");
+
+  // --- sugars ---
+  const sugarHits = []; let tmp = t;
+  SUGARS.forEach(s => { const re = new RegExp("\\b" + s.replace(/[-]/g,"[- ]?") + "\\b"); if (re.test(tmp) && !new RegExp("\\b" + s + "[- ]free\\b").test(tmp)){ sugarHits.push(s); tmp = tmp.replace(new RegExp(re.source, "g"), " "); } });
+  if (sugarHits.length) add(`Added sugar${sugarHits.length>1?"s":""}: ${sugarHits.join(", ")}`, sugarHits.length > 1 ? "Several kinds of sugar are added. Splitting sugar across ingredients hides how much there is in total." : "Contains added sugar.", -(10 + 4*(sugarHits.length-1)), sugarHits.length>2 ? "high" : "med", "sugar");
+  if (typeof p.sugars100 === "number" && p.sugars100 > 22.5) add(`High sugar: ${p.sugars100.toFixed(1)} g per 100 g`, "Above the UK 'high' threshold of 22.5 g per 100 g.", -8, "high", "sugar");
+
+  // --- UPF markers ---
+  const upf = UPF.filter(([,re]) => re.test(t)).map(([n]) => n);
+  if (upf.length) add(`Ultra-processing markers: ${upf.join(", ")}`, "These are industrial ingredients that you wouldn't find in a home kitchen.", -Math.min(25, 5*upf.length), upf.length>2 ? "high" : "med", "upf");
+
+  // --- ingredient count ---
+  const ingList = raw ? splitIngredients(raw) : [];
+  if (ingList.length > 20) add(`${ingList.length} ingredients`, "A very long ingredient list usually means heavy processing.", -10, "med", "count");
+  else if (ingList.length > 10) add(`${ingList.length} ingredients`, "A long ingredient list.", -5, "low", "count");
+
+  // --- NOVA ---
+  let nova = p.nova, inferred = false;
+  if (!nova){
+    inferred = true;
+    const strongUPF = upf.length || addItems.some(a => a.lvl === "h" || a.lvl === "m") || oils.length && sugarHits.length || /\bhydrogenated\b/.test(t);
+    nova = strongUPF ? 4 : (addItems.length || oils.length || sugarHits.length || ingList.length > 3) ? 3 : ingList.length > 1 ? 2 : 1;
+  }
+  const novaPts = {4:-30, 3:-10, 2:-3, 1:0}[nova] ?? 0;
+  const novaTxt = {4:"Ultra-processed (NOVA 4)", 3:"Processed (NOVA 3)", 2:"Processed culinary ingredient (NOVA 2)", 1:"Unprocessed or minimally processed (NOVA 1)"}[nova];
+  const novaDesc = {4:"Industrial formulations made mostly from substances extracted from foods, plus additives. They're far from their natural state.",3:"Natural foods altered with salt, sugar or oil, such as cheese, cured foods or simple breads.",2:"Ingredients like oils, butter, sugar or salt, used in cooking.",1:"Close to its natural state."}[nova];
+  flags.unshift({title:novaTxt, detail:novaDesc + (inferred ? " (Estimated from the ingredients.)" : ""), pts:novaPts, sev: nova===4?"high":nova===3?"med":nova===2?"low":"plus", kind:"nova"});
+  score += novaPts;
+
+  // --- contaminant watch ---
+  const organic = p.organic || /\borganic\b/.test(t) || /\bbio\b/.test(t);
+  if (/\brice\b/.test(t) && !/rice bran oil/.test(t)) add("Contaminant watch: arsenic", "Rice absorbs inorganic arsenic from soil more readily than other grains. This is a category-level risk, not a test result.", -3, "low", "contam");
+  if (BIG_FISH.test(t)) add("Contaminant watch: mercury", "Large predatory fish build up mercury. This is a category-level risk, not a test result.", -4, "low", "contam");
+  if (!organic){ const d = DIRTY.find(x => t.includes(" " + x) ); if (d) add("Contaminant watch: pesticides", "Contains a non-organic crop that typically carries high pesticide residues. This is a category-level risk, not a test result.", -3, "low", "contam"); }
+  if ((p.packaging || []).some(x => /plastic|pet|pp|polypropylene|polyethylene/.test(x))) add("Contaminant watch: microplastics", "Plastic packaging can shed microplastics into food, especially when heated.", -2, "low", "contam");
+
+  if (organic) add("Certified organic", "Grown without synthetic pesticides or fertilisers.", +4, "plus", "plus");
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  // sort: nova first, then by impact
+  const [first, ...rest] = flags; rest.sort((a,b) => a.pts - b.pts);
+  return { score, flags:[first, ...rest], nova, ingList, highlights:{codes, oils, sugarHits} };
+}
+
+function band(s){
+  if (s == null) return {name:"Not enough data", color:"#9aa39a"};
+  if (s >= 75) return {name:"Excellent", color:"var(--excellent)"};
+  if (s >= 50) return {name:"Good", color:"var(--good)"};
+  if (s >= 25) return {name:"Mediocre", color:"var(--mediocre)"};
+  return {name:"Poor", color:"var(--poor)"};
+}
+
+/* ---------------- intolerance engine ---------------- */
+const INTOL = [
+  {id:"gluten", label:"Gluten", grp:"A", tags:["en:gluten"],
+    strip:[/\bgluten[- ]free( oats| oat flakes| oat flour| oatmeal)?\b/g, /\bbuckwheat\b/g],
+    re:/\b(wheat|barley|rye|spelt|kamut|khorasan|semolina|durum|farro|bulgur|couscous|triticale|seitan|einkorn|emmer|malt|malted|gluten)\b/g,
+    may:/\b(oats?|oatmeal|oat flakes|oat flour)\b/g, mayNote:"Oats are often cross-contaminated with gluten unless labelled gluten-free."},
+  {id:"dairy", label:"Dairy / lactose", grp:"A", tags:["en:milk"],
+    strip:[/\b(coconut|almond|oat|soy|soya|rice|cashew|hazelnut|nut|pea) (milk|cream|yog(h)?urt|drink|butter)\b/g, /\b(cocoa|peanut|shea|nut|almond|cashew|seed|apple|hazelnut) butter\b/g, /\bcream of tartar\b/g, /\bbutternut\b/g, /\b(dairy|milk|lactose)[- ]free\b/g, /\bbutter beans?\b/g],
+    re:/\b(milk|milks|cream|butter|buttermilk|cheese|yog(h)?urts?|whey|casein|caseinates?|lactose|ghee|curds?|lactalbumin|lactoglobulin|kefir|quark|paneer|ricotta|mozzarella|cheddar|parmesan|skyr|custard|fromage frais)\b/g},
+  {id:"eggs", label:"Eggs", grp:"A", tags:["en:eggs"], strip:[/\beggplant\b/g, /\begg[- ]free\b/g],
+    re:/\b(eggs?|egg yolks?|egg whites?|albumen|ovalbumin|lysozyme|mayonnaise|meringue)\b/g},
+  {id:"peanuts", label:"Peanuts", grp:"A", tags:["en:peanuts"], strip:[/\bpeanut[- ]free\b/g], re:/\b(peanuts?|groundnuts?|arachis)\b/g},
+  {id:"treenuts", label:"Tree nuts", grp:"A", tags:["en:nuts"], strip:[/\b(nut|nuts)[- ]free\b/g, /\bnutmeg\b/g],
+    re:/\b(almonds?|hazelnuts?|walnuts?|cashews?|pecans?|pistachios?|macadamias?|brazil nuts?|pine nuts?|praline|marzipan|frangipane|gianduja|nuts?)\b/g},
+  {id:"soy", label:"Soy", grp:"A", tags:["en:soybeans"], strip:[/\bsoy(a)?[- ]free\b/g], re:/\b(soy|soya|soybeans?|tofu|edamame|miso|tempeh|tamari|shoyu)\b/g},
+  {id:"sesame", label:"Sesame", grp:"A", tags:["en:sesame-seeds"], re:/\b(sesame|tahini|gingelly)\b/g},
+  {id:"fish", label:"Fish", grp:"A", tags:["en:fish"],
+    re:/\b(fish|anchov(y|ies)|tuna|salmon|cod|haddock|sardines?|mackerel|pollock|pollack|trout|hake|basa|tilapia|herring|worcestershire)\b/g},
+  {id:"shellfish", label:"Shellfish", grp:"A", tags:["en:crustaceans","en:molluscs"],
+    re:/\b(shellfish|shrimps?|prawns?|crabs?|lobsters?|crayfish|langoustines?|scampi|mussels?|oysters?|clams?|scallops?|squid|calamari|octopus|cuttlefish|krill)\b/g},
+  {id:"celery", label:"Celery", grp:"A", tags:["en:celery"], re:/\b(celery|celeriac)\b/g},
+  {id:"mustard", label:"Mustard", grp:"A", tags:["en:mustard"], re:/\bmustard\b/g},
+  {id:"lupin", label:"Lupin", grp:"A", tags:["en:lupin"], re:/\blupin[a-z]*\b/g},
+  {id:"sulphites", label:"Sulphites", grp:"A", tags:["en:sulphur-dioxide-and-sulphites"],
+    re:/\b(sulphites?|sulfites?|sulphur dioxide|sulfur dioxide|metabisulphites?|metabisulfites?|bisulphites?|bisulfites?|e ?22[0-8])\b/g},
+  {id:"fodmap", label:"High-FODMAP", grp:"I",
+    re:/\b(garlic|onions?|shallots?|leeks?|inulin|chicory root( fibre| fiber| extract)?|fructose|high fructose corn syrup|honey|agave|sorbitol|mannitol|xylitol|maltitol|isomalt|lactose|apple juice concentrate|pear juice|chickpeas?|lentils?|kidney beans?|e ?42[01]|e ?953|e ?96[57])\b/g},
+  {id:"histamine", label:"Histamine triggers", grp:"I",
+    re:/\b(vinegar|wine|soy sauce|sauerkraut|kimchi|kombucha|salami|chorizo|pepperoni|smoked|cured|anchov(y|ies)|tuna|mackerel|sardines?|parmesan|cheddar|spinach|tomato(es)?|aubergine|eggplant|avocado|yeast extract|miso|tempeh)\b/g},
+  {id:"caffeine", label:"Caffeine", grp:"I", re:/\b(caffeine|coffee|guarana|yerba mate|matcha|green tea|black tea|tea extract|kola nut|cola nut)\b/g},
+  {id:"sweeteners", label:"Artificial sweeteners", grp:"I",
+    re:/\b(aspartame|sucralose|acesulfame( k| potassium)?|saccharin|cyclamates?|neotame|advantame|sweeteners?|e ?95[0-5]|e ?96[12])\b/g},
+  {id:"nightshades", label:"Nightshades", grp:"I", strip:[/\bsweet potato(es)?\b/g],
+    re:/\b(tomato(es)?|potato(es)?|(sweet|red|green|yellow|bell|chil?li|jalape[nñ]o) peppers?|paprika|chil?li(es)?|cayenne|aubergine|eggplant|goji|tomatillos?|pimentos?|e ?160c)\b/g},
+  {id:"corn", label:"Corn", grp:"I", re:/\b(corn|maize|cornflour|cornstarch|corn starch|polenta|popcorn|corn syrup)\b/g},
+];
+const MAY_RE = /(may contain|may also contain|may be present|traces? of|made in a (factory|facility)|produced (in|on) a|manufactured (in|on) a|also handles|processed in a|not suitable for [a-z ]*allerg)/i;
+function splitMay(raw){ const i = (raw || "").search(MAY_RE); return i < 0 ? [raw || "", ""] : [raw.slice(0, i), raw.slice(i)]; }
+const getProfile = () => store.get("sprig.profile", []);
+
+function checkIntol(p, prof = getProfile()){
+  if (!prof.length) return null;
+  const raw = p.ingredients || "";
+  const [main, mayTxt] = splitMay(raw);
+  const items = [];
+  INTOL.filter(d => prof.includes(d.id)).forEach(d => {
+    const scan = (txt, set) => { let t = " " + txt.toLowerCase().replace(/_/g, "") + " "; (d.strip || []).forEach(s => { t = t.replace(s, " "); }); (t.match(d.re) || []).forEach(m => set.add(m.trim())); return t; };
+    const hits = new Set(), mayHits = new Set();
+    const cleaned = scan(main, hits);
+    let note = "";
+    if (d.may && !hits.size){ const mm = cleaned.match(d.may) || []; mm.forEach(m => mayHits.add(m.trim())); if (mm.length) note = d.mayNote; }
+    scan(mayTxt, mayHits);
+    const tagHit = (p.allergens || []).some(t => (d.tags || []).includes(t));
+    const traceHit = (p.traces || []).some(t => (d.tags || []).includes(t));
+    const level = (hits.size || tagHit) ? "contains" : (mayHits.size || traceHit) ? "may" : null;
+    if (level) items.push({id:d.id, label:d.label, level, hits:[...hits], mayHits:[...mayHits], tagHit, traceHit, note});
+  });
+  return {prof, noData: !raw.trim() && !(p.allergens || []).length, items,
+    contains: items.filter(i => i.level === "contains"), may: items.filter(i => i.level === "may")};
+}
+const labelOf = id => INTOL.find(d => d.id === id)?.label || id;
+
+/* ---------------- demo catalogue (works offline) ---------------- */
+const DEMO = [
+  {code:"demo-cookie", name:"Chocolate Sandwich Cookies", brand:"Demo product", cat:"biscuits", sugars100:38,
+   ingredients:"Wheat flour, sugar, palm oil, rapeseed oil, fat-reduced cocoa powder 4.5%, wheat starch, glucose-fructose syrup, raising agents (potassium hydrogen carbonates, ammonium hydrogen carbonates, sodium hydrogen carbonates), salt, emulsifiers (soya lecithin, sunflower lecithin), flavouring (vanillin)"},
+  {code:"demo-shortbread", name:"All-Butter Shortbread", brand:"Demo product", cat:"biscuits", sugars100:18,
+   ingredients:"Wheat flour, butter (milk) 32%, sugar, salt"},
+  {code:"demo-oatcake", name:"Organic Rough Oatcakes", brand:"Demo product", cat:"biscuits", sugars100:1.2, organic:true,
+   ingredients:"Organic wholegrain oats 88%, organic olive oil, sea salt, raising agent (sodium bicarbonate)"},
+  {code:"demo-crisps", name:"Cheese & Onion Flavour Crisps", brand:"Demo product", cat:"crisps", packaging:["plastic"],
+   ingredients:"Potatoes, sunflower oil, rapeseed oil, cheese & onion seasoning (milk whey powder, dextrose, onion powder, flavourings, flavour enhancers (monosodium glutamate, disodium 5'-ribonucleotides), cheese powder, acid (citric acid), colours (paprika extract))"},
+  {code:"demo-olivecrisps", name:"Sea Salt Crisps in Olive Oil", brand:"Demo product", cat:"crisps", packaging:["plastic"],
+   ingredients:"Potatoes, extra virgin olive oil, sea salt"},
+  {code:"demo-yog", name:"Strawberry Fat-Free Yoghurt", brand:"Demo product", cat:"yoghurt", sugars100:6.1, packaging:["plastic"],
+   ingredients:"Yoghurt (skimmed milk), strawberries 6%, modified maize starch, gelatine, stabiliser (pectin), acidity regulator (sodium citrate), sweeteners (aspartame, acesulfame K), flavourings, colour (carmine)"},
+  {code:"demo-greek", name:"Organic Greek-Style Yoghurt", brand:"Demo product", cat:"yoghurt", sugars100:4.4, organic:true,
+   ingredients:"Organic whole milk, live cultures"},
+  {code:"demo-cola", name:"Diet Cola", brand:"Demo product", cat:"drinks", sugars100:0,
+   ingredients:"Carbonated water, colour (caramel E150d), sweeteners (aspartame, acesulfame K), acids (phosphoric acid, citric acid), flavourings (including caffeine), preservative (potassium sorbate)"},
+  {code:"demo-kombucha", name:"Ginger Kombucha", brand:"Demo product", cat:"drinks", sugars100:2.1,
+   ingredients:"Kombucha (filtered water, green tea, black tea, cane sugar, live cultures), ginger juice 4%"},
+  {code:"demo-sparkling", name:"Sparkling Water with Lemon", brand:"Demo product", cat:"drinks", sugars100:0,
+   ingredients:"Carbonated spring water, lemon juice 1%"},
+  {code:"demo-bread", name:"Soft White Sliced Bread", brand:"Demo product", cat:"bread", sugars100:3.5, packaging:["plastic"],
+   ingredients:"Wheat flour (with calcium carbonate, iron, niacin, thiamin), water, yeast, salt, soya flour, preservative (calcium propionate), emulsifiers (E471, E481, E472e), rapeseed oil, flour treatment agent (ascorbic acid)"},
+  {code:"demo-sourdough", name:"Traditional Sourdough Loaf", brand:"Demo product", cat:"bread", sugars100:1.8,
+   ingredients:"Wheat flour, water, salt, sourdough starter (wheat flour, water)"},
+];
+
+/* ---------------- Open Food Facts ---------------- */
+const OFF = "https://world.openfoodfacts.org";
+const FIELDS = "code,product_name,product_name_en,generic_name,brands,ingredients_text,ingredients_text_en,additives_tags,allergens_tags,traces_tags,nova_group,nutriments,labels_tags,packaging_tags,categories_tags,image_front_small_url";
+let online = null; // null unknown, true/false
+
+function normOFF(x){
+  return {
+    code: x.code, name: x.product_name_en || x.product_name || x.generic_name || "Unnamed product",
+    brand: (x.brands || "").split(",")[0].trim(), ingredients: x.ingredients_text_en || x.ingredients_text || "",
+    additives: x.additives_tags || [], allergens: x.allergens_tags || [], traces: x.traces_tags || [], nova: x.nova_group ? Number(x.nova_group) : null,
+    sugars100: typeof x.nutriments?.sugars_100g === "number" ? x.nutriments.sugars_100g : (x.nutriments?.sugars_100g ? Number(x.nutriments.sugars_100g) : undefined),
+    organic: (x.labels_tags || []).some(l => /organic|bio/.test(l)), packaging: x.packaging_tags || [],
+    categories: x.categories_tags || [], image: x.image_front_small_url || "", source:"off"
+  };
+}
+async function offGet(path){
+  const r = await withTimeout(fetch(OFF + path, {headers:{Accept:"application/json"}}), 12000);
+  if (!r.ok) throw Object.assign(new Error("HTTP " + r.status), {http:true});
+  return r.json();
+}
+async function checkOnline(){
+  try { await withTimeout(fetch(OFF + "/api/v2/product/3017620422003.json?fields=code"), 8000); online = true; }
+  catch { online = false; }
+  const pill = $("#netPill");
+  pill.textContent = online ? "Database online" : "Offline mode";
+  pill.classList.toggle("off", !online);
+}
+
+async function findAlternatives(p, current){
+  if (p.source === "demo"){
+    return DEMO.filter(d => d.cat === p.cat && d.code !== p.code).map(d => ({...d, source:"demo", ...scoreProduct(d)}))
+      .filter(d => d.score > current + 5).sort((a,b) => b.score - a.score);
+  }
+  if (!online || !p.categories?.length) return null;
+  const country = store.get("sprig.country", "");
+  const cats = p.categories.slice().reverse().slice(0, 3);
+  const results = new Map();
+  for (const c of cats){
+    let q = `/api/v2/search?categories_tags=${encodeURIComponent(c)}&fields=${FIELDS}&page_size=60&sort_by=unique_scans_n`;
+    if (country) q += `&countries_tags=${encodeURIComponent(country)}`;
+    try {
+      const j = await offGet(q);
+      (j.products || []).forEach(x => { if (x.code !== p.code && (x.ingredients_text || x.ingredients_text_en)) { const n = normOFF(x); const s = scoreProduct(n); if (s.score != null && s.score > current + 5) results.set(n.code, {...n, ...s}); } });
+    } catch {}
+    if (results.size >= 5) break;
+  }
+  return [...results.values()].sort((a,b) => b.score - a.score).slice(0, 6);
+}
+
+/* ---------------- Claude (only when hosted on claude.ai with the sample capability) ---------------- */
+let samplePromise = null;
+function getSample(){
+  if (!samplePromise) samplePromise = (window.claude && typeof window.claude.use === "function") ? window.claude.use("sample").catch(() => null) : Promise.resolve(null);
+  return samplePromise;
+}
+
+/* ---------------- state / navigation ---------------- */
+let currentTab = "scan", resultStack = [];
+function show(view){
+  ["scan","result","history","profile","about"].forEach(v => $("#view-" + v).classList.toggle("hidden", v !== view));
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === (view === "result" ? currentTab : view)));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => { currentTab = b.dataset.tab; resultStack = []; if (currentTab === "history") renderHistory(); if (currentTab === "scan") { renderRecent(); renderSummary(); } if (currentTab === "profile") renderProfile(); show(currentTab); });
+$("#btnBack").onclick = () => { resultStack.pop(); if (resultStack.length) renderResult(resultStack.pop()); else { renderRecent(); renderHistory(); renderSummary(); show(currentTab); } };
+function goProfile(){ currentTab = "profile"; resultStack = []; renderProfile(); show("profile"); }
+
+/* ---------------- profile ---------------- */
+function renderProfile(){
+  const prof = getProfile();
+  const chip = d => `<button class="tchip ${prof.includes(d.id) ? "on" : ""}" data-id="${d.id}"><span class="ck">✓</span>${esc(d.label)}</button>`;
+  $("#chipsA").innerHTML = INTOL.filter(d => d.grp === "A").map(chip).join("");
+  $("#chipsI").innerHTML = INTOL.filter(d => d.grp === "I").map(chip).join("");
+  document.querySelectorAll("#view-profile .tchip").forEach(b => b.onclick = () => {
+    const cur = getProfile(), id = b.dataset.id;
+    store.set("sprig.profile", cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]);
+    b.classList.toggle("on");
+  });
+}
+function renderSummary(){
+  const prof = getProfile(), el = $("#profileSummary");
+  el.innerHTML = prof.length
+    ? `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--leaf)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+       <div style="flex:1"><b>Checking for</b><div class="muted">${esc(prof.map(labelOf).join(", "))}</div></div><span style="color:var(--leaf);font-weight:700">Edit</span>`
+    : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--leaf)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+       <div style="flex:1"><b>Have food intolerances or allergies?</b><div class="muted">Add them and every product gets checked.</div></div><span style="color:var(--leaf);font-weight:700">Set up</span>`;
+}
+$("#profileSummary").onclick = goProfile;
+
+function intolBanner(p){
+  const r = checkIntol(p);
+  if (!r) return `<button class="card setup" id="resSetup"><div style="flex:1"><b>Get intolerance warnings</b><div class="muted">Tell Sprig what you avoid and it will check every product.</div></div><span style="color:var(--leaf);font-weight:700">Set up</span></button>`;
+  if (r.noData) return `<div class="alert may"><h4>Can't check your list</h4><div class="li">This product has no ingredient or allergen data yet. Score it from the label to check it.</div></div>`;
+  const line = i => {
+    const words = i.level === "contains" ? i.hits : i.mayHits;
+    const what = words.length ? words.join(", ") : (i.level === "contains" ? "declared as an allergen" : "listed under traces");
+    return `<div class="li"><b>${esc(i.label)}</b>: ${esc(what)}${i.note ? `<br><span style="opacity:.85">${esc(i.note)}</span>` : ""}</div>`;
+  };
+  let h = "";
+  if (r.contains.length) h += `<div class="alert bad"><h4>⚠ Contains ${esc(r.contains.map(i => i.label).join(", "))}</h4>${r.contains.map(line).join("")}</div>`;
+  if (r.may.length) h += `<div class="alert may"><h4>May contain ${esc(r.may.map(i => i.label).join(", "))}</h4>${r.may.map(line).join("")}</div>`;
+  if (!h) h = `<div class="alert ok"><h4>✓ Nothing on your list found</h4><div class="li">Checked for ${esc(r.prof.map(labelOf).join(", "))}.</div><div class="fine">If you have a serious allergy, always check the pack itself.</div></div>`;
+  else h = h.replace(/<\/div>$/, `<div class="fine">Based on database and label data. Always check the pack itself.</div></div>`);
+  return h;
+}
+function bindBanner(){ const b = $("#resSetup"); if (b) b.onclick = goProfile; }
+
+/* ---------------- history ---------------- */
+function saveHistory(p, s){
+  const h = store.get("sprig.history", []).filter(x => x.key !== (p.code || p.name));
+  h.unshift({key:p.code || p.name, at:Date.now(), score:s.score, p:{...p, image:p.image}});
+  store.set("sprig.history", h.slice(0, 60));
+}
+function histRow(x){
+  const b = band(x.score), r = checkIntol(x.p);
+  const warn = r && r.contains.length ? `<div class="small tag-bad">⚠ ${esc(r.contains.map(i => i.label).join(", "))}</div>` : r && r.may.length ? `<span class="tag-may">May contain ${esc(r.may.map(i => i.label).join(", "))}</span>` : "";
+  return `<button class="hist" data-key="${esc(x.key)}"><div class="mini" style="background:${b.color}">${x.score ?? "–"}</div>
+    <div style="min-width:0"><div class="n" style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.p.name)}</div>
+    <div class="small muted">${esc(x.p.brand || "")}${x.p.brand ? " · " : ""}${new Date(x.at).toLocaleDateString()}</div>${warn}</div></button>`;
+}
+function bindHist(box){
+  box.querySelectorAll(".hist").forEach(el => el.onclick = () => { const x = store.get("sprig.history", []).find(h => h.key === el.dataset.key); if (x) openProduct(x.p, {fromHistory:true}); });
+}
+function renderRecent(){
+  const h = store.get("sprig.history", []).slice(0, 4), box = $("#recentBox");
+  box.innerHTML = h.length ? h.map(histRow).join("") : `<div class="empty small">Products you scan will show up here.</div>`;
+  bindHist(box);
+}
+function renderHistory(){
+  const h = store.get("sprig.history", []), box = $("#historyBox");
+  box.innerHTML = h.length ? h.map(histRow).join("") : `<div class="empty">No scans yet.</div>`;
+  bindHist(box);
+  $("#btnClear").classList.toggle("hidden", !h.length);
+}
+$("#btnClear").onclick = () => { store.set("sprig.history", []); renderHistory(); renderRecent(); };
+
+/* ---------------- result rendering ---------------- */
+function ringSVG(score, color){
+  const r = 50, c = 2*Math.PI*r, pct = score == null ? 0 : score/100;
+  return `<svg width="118" height="118" viewBox="0 0 118 118"><circle cx="59" cy="59" r="${r}" fill="none" stroke="#ece5d5" stroke-width="12"/>
+    <circle cx="59" cy="59" r="${r}" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-pct)}" transform="rotate(-90 59 59)" style="transition:stroke-dashoffset .8s ease"/></svg>`;
+}
+function highlightIngredients(text, hl, allergyWords = []){
+  let h = esc(text);
+  const G = "(?![^<]*<\\/mark>)";
+  const wrap = (re, cls) => { h = h.replace(re, m => `<mark class="${cls}">${m}</mark>`); };
+  const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  [...new Set(allergyWords)].sort((a,b) => b.length - a.length).forEach(w => wrap(new RegExp(`\\b${reEsc(w)}\\b${G}`, "gi"), "a"));
+  hl.oils.forEach(o => wrap(new RegExp(`\\b${o.split(" ")[0]}[a-z ]*?oils?\\b${G}`, "gi"), "o"));
+  wrap(new RegExp(`\\bpalm (kernel )?(oil|fat)\\b${G}`, "gi"), "o");
+  hl.sugarHits.forEach(s => wrap(new RegExp(`\\b${s.replace(/[-]/g,"[- ]?")}\\b(?![^<]*<\\/mark>)`, "gi"), "s"));
+  wrap(/\bE ?\d{3,4}[a-f]?\b(?![^<]*<\/mark>)/gi, "");
+  NAMED_ADD.forEach(([re]) => { const a = ADD[NAMED_ADD.find(n => n[0] === re)[1]]; if (a && PEN[a[0]] >= 8) wrap(new RegExp(re.source + "(?![^<]*<\\/mark>)", "gi"), ""); });
+  UPF.forEach(([, re]) => wrap(new RegExp(re.source + "(?![^<]*<\\/mark>)", "gi"), ""));
+  wrap(/\b(partially )?hydrogenated[a-z ]*?(fat|oil)s?\b/gi, "");
+  return h;
+}
+const sevColor = {high:"var(--poor)", med:"var(--mediocre)", low:"#c9b37a", plus:"var(--excellent)", info:"#9aa39a"};
+
+function openProduct(p, opts = {}){
+  const s = scoreProduct(p);
+  if (!opts.noSave) saveHistory(p, s);
+  renderResult({p, s});
+}
+
+function renderResult(entry){
+  resultStack.push(entry);
+  const {p, s} = entry, b = band(s.score);
+  const body = $("#resultBody");
+  const img = p.image ? `<img class="thumb" src="${esc(p.image)}" alt="" onerror="this.remove()" style="width:64px;height:64px">` : "";
+  let html = `<div class="card"><div class="res-head">
+      <div class="ring">${ringSVG(s.score, b.color)}<div class="num"><div><b>${s.score ?? "?"}</b><span>/ 100</span></div></div></div>
+      <div style="min-width:0"><h2 class="pname">${esc(p.name)}</h2><div class="pbrand">${esc(p.brand || "")}${p.code && !String(p.code).startsWith("demo") && !String(p.code).startsWith("label") ? (p.brand ? " · " : "") + esc(p.code) : ""}</div>
+      <span class="band" style="background:${b.color}">${b.name}</span></div>${img}
+    </div></div>`;
+  html += intolBanner(p);
+
+  if (s.insufficient){
+    html += `<div class="notice">This product has no ingredient list in the database yet. Photograph the ingredients label or paste the ingredients to get a score.</div>
+      <button class="btn solid" id="resLabel">Score from the label</button>`;
+    body.innerHTML = html; show("result"); bindBanner();
+    $("#resLabel").onclick = () => openLabel(p.name);
+    return;
+  }
+
+  html += `<div class="sec-title">Why this score</div><div class="card">` + s.flags.map(f => `
+    <div class="flag"><div class="dot" style="background:${sevColor[f.sev]}"></div>
+      <div style="flex:1;min-width:0"><div class="t">${esc(f.title)}</div><div class="d">${esc(f.detail)}</div></div>
+      <div class="imp" style="color:${f.pts > 0 ? "var(--excellent)" : f.pts < 0 ? "var(--poor)" : "var(--muted)"}">${f.pts > 0 ? "+" : ""}${f.pts || "0"}</div></div>`).join("") + `</div>`;
+
+  if (p.ingredients){
+    const ir = checkIntol(p), aw = ir ? ir.items.flatMap(i => [...i.hits, ...i.mayHits]) : [];
+    html += `<div class="sec-title">Ingredients</div><div class="card ingr">${highlightIngredients(p.ingredients, s.highlights, aw)}
+      <div class="small muted mt">Highlighted: ${aw.length ? `<mark class="a">on your list</mark> ` : ""}<mark class="o">refined oils</mark> <mark class="s">added sugars</mark> <mark>additives &amp; markers</mark></div></div>`;
+  }
+
+  html += `<div class="sec-title">${s.score >= 85 ? "Similar options" : "Cleaner alternatives"}</div><div id="altBox"><div class="loading"><span class="spinner"></span>Searching the same aisle…</div></div>`;
+  body.innerHTML = html; show("result"); bindBanner();
+  loadAlternatives(p, s);
+}
+
+async function loadAlternatives(p, s){
+  const box = $("#altBox");
+  let alts = null;
+  try { alts = await findAlternatives(p, s.score); } catch {}
+  if (!document.body.contains(box)) return;
+  let hidden = 0;
+  if (alts && getProfile().length){
+    const before = alts.length;
+    alts = alts.map(a => ({...a, _ir: checkIntol(a)})).filter(a => !a._ir.contains.length);
+    hidden = before - alts.length;
+  }
+  const hiddenNote = hidden ? `<div class="small muted" style="margin:-2px 4px 10px">${hidden} option${hidden > 1 ? "s" : ""} hidden because ${hidden > 1 ? "they contain" : "it contains"} something on your list.</div>` : "";
+  if (alts && alts.length){
+    box.innerHTML = hiddenNote + alts.map((a, i) => { const b = band(a.score); const may = a._ir?.may.length ? `<span class="tag-may">May contain ${esc(a._ir.may.map(x => x.label).join(", "))}</span>` : ""; return `<button class="alt" data-i="${i}">
+      ${a.image ? `<img class="thumb" src="${esc(a.image)}" alt="" onerror="this.style.visibility='hidden'">` : ""}
+      <div style="flex:1;min-width:0"><div class="n">${esc(a.name)}</div><div class="b">${esc(a.brand || "")}</div>${may}</div>
+      <div class="mini" style="background:${b.color}">${a.score}</div></button>`; }).join("");
+    box.querySelectorAll(".alt").forEach(el => el.onclick = () => { const a = alts[+el.dataset.i]; const {score, flags, nova, ingList, highlights, insufficient, _ir, ...prod} = a; openProduct(prod); });
+    return;
+  }
+  if (hidden && alts && !alts.length){ box.innerHTML = `<div class="card small muted">We found cleaner options, but they all contain something on your list.</div>`; return; }
+  if (alts && !alts.length && s.score >= 75){ box.innerHTML = `<div class="card small muted">This product already scores well. We didn't find anything clearly cleaner in the same category.</div>`; return; }
+
+  const sample = await getSample();
+  if (sample && p.source !== "demo"){
+    box.innerHTML = `<div class="card"><p class="small muted" style="margin-top:0">${online ? "There's not enough category data to find matching products." : "The product database can't be reached from here."} Claude can suggest cleaner swaps instead, and Sprig will score their typical ingredient lists with the same rules.</p>
+      <button class="btn solid" id="btnSwaps">Suggest cleaner swaps</button></div>`;
+    $("#btnSwaps").onclick = () => claudeSwaps(p, s, box, sample);
+  } else if (alts && !alts.length) {
+    box.innerHTML = `<div class="card small muted">We didn't find higher-scoring products in this category${store.get("sprig.country","") ? " for your selected country" : ""} yet.</div>`;
+  } else {
+    box.innerHTML = `<div class="card small muted">${online === false ? "Alternatives need the product database, which can't be reached here. Host Sprig on your own site to unlock them, or try a demo product." : "This product has no category data, so we can't search for alternatives."}</div>`;
+  }
+}
+
+async function claudeSwaps(p, s, box, sample){
+  box.innerHTML = `<div class="loading"><span class="spinner"></span>Finding cleaner swaps…</div>`;
+  try {
+    const prompt = `You help shoppers find less-processed food. A product scored ${s.score}/100 for processing.
+Product: ${p.name}${p.brand ? " by " + p.brand : ""}
+Ingredients: ${p.ingredients}
+Main problems: ${s.flags.filter(f=>f.pts<0).slice(0,5).map(f=>f.title).join("; ")}
+${getProfile().length ? `The shopper must avoid: ${getProfile().map(labelOf).join(", ")}. Every suggestion must be free of these.\n` : ""}
+Suggest 4 cleaner alternatives a shopper could buy in the same aisle (product types, or widely available brands if you are confident about their ingredients). For each, give a realistic typical ingredient list.
+Reply with JSON only: {"swaps":[{"name":"...","why":"one short sentence","ingredients":"comma-separated typical ingredients"}]}`;
+    const res = await sample.json(prompt, {modelTier:"quick"});
+    const swaps = (res?.swaps || []).map(x => { const prod = {code:"swap-" + x.name, name:x.name, brand:"Suggested swap", ingredients:x.ingredients, source:"claude", why:x.why}; return {...prod, ...scoreProduct(prod)}; })
+      .filter(x => x.score != null && !(checkIntol(x)?.contains.length)).sort((a,b) => b.score - a.score);
+    if (!swaps.length) throw new Error("none");
+    box.innerHTML = swaps.map((a,i) => { const b = band(a.score); return `<button class="alt" data-i="${i}"><div style="flex:1;min-width:0"><div class="n">${esc(a.name)}</div><div class="b">${esc(a.why || "")}</div></div><div class="mini" style="background:${b.color}">${a.score}</div></button>`; }).join("")
+      + `<div class="small muted">These scores are for typical ingredient lists. Check the label on the pack in store.</div>`;
+    box.querySelectorAll(".alt").forEach(el => el.onclick = () => { const a = swaps[+el.dataset.i]; openProduct({code:a.code, name:a.name, brand:a.brand, ingredients:a.ingredients, source:"claude"}, {noSave:true}); });
+  } catch (e) {
+    box.innerHTML = `<div class="notice err">${e?.code === "rate_limited" ? "Too many requests right now. Try again in a minute." : e?.code === "not_granted" ? "Claude suggestions aren't enabled for this page." : "Couldn't get suggestions this time."}</div>`;
+  }
+}
+
+/* ---------------- lookup flow ---------------- */
+async function lookup(code){
+  code = String(code).replace(/\D/g, "");
+  if (code.length < 6){ toastErr("That doesn't look like a barcode. Barcodes are usually 8 or 13 digits."); return; }
+  $("#resultBody").innerHTML = `<div class="loading"><span class="spinner"></span>Looking up ${esc(code)}…</div>`;
+  resultStack = []; show("result");
+  if (online === null) await checkOnline();
+  if (!online){
+    $("#resultBody").innerHTML = `<div class="notice">Barcode <b>${esc(code)}</b> was read, but the product database can't be reached from here. This happens on claude.ai, where outside connections are blocked. On your own hosting, lookups work fully.<br><br>You can still score the product from its ingredients label.</div>
+      <button class="btn solid" id="offLabel">Score from the label</button>`;
+    $("#offLabel").onclick = () => openLabel("", code);
+    return;
+  }
+  try {
+    const j = await offGet(`/api/v2/product/${code}.json?fields=${FIELDS}`);
+    if (j.status !== 1 || !j.product) throw Object.assign(new Error("notfound"), {nf:true});
+    resultStack = [];
+    openProduct(normOFF({...j.product, code}));
+  } catch (e) {
+    resultStack = [];
+    $("#resultBody").innerHTML = `<div class="notice ${e.nf ? "" : "err"}">${e.nf ? `We couldn't find <b>${esc(code)}</b> in the database yet.` : "The lookup failed. Check your connection and try again."} You can photograph the ingredients label instead, and Sprig will calculate a score.</div>
+      <button class="btn solid" id="nfLabel">Score from the label</button>`;
+    $("#nfLabel").onclick = () => openLabel("", code);
+  }
+}
+function toastErr(msg){
+  let n = document.getElementById("toast");
+  if (!n){ n = document.createElement("div"); n.id = "toast"; n.className = "notice err"; n.style.cssText = "position:fixed;left:16px;right:16px;bottom:96px;max-width:528px;margin:0 auto;z-index:60"; document.body.appendChild(n); }
+  n.textContent = msg; n.classList.remove("hidden"); clearTimeout(n._t); n._t = setTimeout(() => n.classList.add("hidden"), 4200);
+}
+
+$("#codeForm").onsubmit = e => { e.preventDefault(); const v = $("#codeInput").value.trim(); if (v) lookup(v); };
+
+/* ---------------- barcode decoding ---------------- */
+const ZXING = "https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js";
+const FORMATS = ["ean_13","ean_8","upc_a","upc_e"];
+async function nativeDetector(){
+  if (!("BarcodeDetector" in window)) return null;
+  try { const sup = await BarcodeDetector.getSupportedFormats(); const f = FORMATS.filter(x => sup.includes(x)); return f.length ? new BarcodeDetector({formats:f}) : null; } catch { return null; }
+}
+async function decodeImageFile(file){
+  const det = await nativeDetector();
+  if (det){
+    try { const bmp = await createImageBitmap(file); const r = await det.detect(bmp); if (r[0]) return r[0].rawValue; } catch {}
+  }
+  await loadScript(ZXING);
+  const url = URL.createObjectURL(file);
+  try {
+    const hints = new Map(); hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    const reader = new ZXing.BrowserMultiFormatReader(hints);
+    const res = await reader.decodeFromImageUrl(url); return res.getText();
+  } finally { URL.revokeObjectURL(url); }
+}
+$("#btnBarcodePhoto").onclick = () => $("#fileBarcode").click();
+$("#fileBarcode").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  $("#resultBody").innerHTML = `<div class="loading"><span class="spinner"></span>Reading barcode…</div>`; resultStack = []; show("result");
+  try { const code = await decodeImageFile(f); lookup(code); }
+  catch { resultStack = []; $("#resultBody").innerHTML = `<div class="notice err">We couldn't read a barcode in that photo. Try again closer up with good light, or type the number.</div><button class="btn solid" id="retryPhoto">Try another photo</button>`; $("#retryPhoto").onclick = () => $("#fileBarcode").click(); }
+};
+
+/* ---------------- live camera ---------------- */
+let stream = null, scanning = false, zxReader = null;
+async function startCamera(){
+  if (!navigator.mediaDevices?.getUserMedia){ fallbackToPhoto("This browser doesn't support live camera scanning."); return; }
+  $("#scanOverlay").classList.remove("hidden");
+  const video = $("#video");
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1280}, height:{ideal:720}}, audio:false});
+  } catch (err) {
+    stopCamera();
+    fallbackToPhoto(err?.name === "NotAllowedError" ? "Camera access was blocked. Here you can take a photo of the barcode instead." : "The live camera isn't available here. Take a photo of the barcode instead.");
+    return;
+  }
+  video.srcObject = stream; await video.play().catch(()=>{});
+  scanning = true;
+  const det = await nativeDetector();
+  if (det){
+    const loop = async () => {
+      if (!scanning) return;
+      try { const r = await det.detect(video); if (r[0]){ onScanned(r[0].rawValue); return; } } catch {}
+      requestAnimationFrame(loop);
+    };
+    loop();
+  } else {
+    try {
+      await loadScript(ZXING);
+      zxReader = new ZXing.BrowserMultiFormatReader();
+      zxReader.decodeFromStream(stream, video, (res) => { if (res && scanning) onScanned(res.getText()); });
+    } catch { $("#scanHint").textContent = "The scanner library couldn't load. Cancel and type the number."; }
+  }
+}
+function stopCamera(){
+  scanning = false;
+  try { zxReader?.reset(); } catch {} zxReader = null;
+  stream?.getTracks().forEach(t => t.stop()); stream = null;
+  $("#scanOverlay").classList.add("hidden");
+}
+function onScanned(code){ if (navigator.vibrate) try { navigator.vibrate(60); } catch {} stopCamera(); lookup(code); }
+function fallbackToPhoto(msg){ toastErr(msg); setTimeout(() => $("#fileBarcode").click(), 50); }
+$("#btnCamera").onclick = startCamera;
+$("#btnStopScan").onclick = stopCamera;
+
+/* ---------------- label flow ---------------- */
+let labelCode = "";
+function openLabel(name = "", code = ""){
+  labelCode = code; $("#lblName").value = name || ""; $("#lblText").value = ""; $("#labelStatus").textContent = "";
+  $("#labelModal").classList.remove("hidden");
+}
+$("#btnLabel").onclick = () => openLabel();
+$("#btnLabelCancel").onclick = () => $("#labelModal").classList.add("hidden");
+$("#labelModal").onclick = e => { if (e.target.id === "labelModal") $("#labelModal").classList.add("hidden"); };
+$("#btnLabelPhoto").onclick = () => $("#fileLabel").click();
+$("#btnLabelScore").onclick = () => {
+  const ing = $("#lblText").value.trim();
+  if (!ing){ $("#labelStatus").innerHTML = `<span style="color:var(--poor)">Add the ingredients first.</span>`; return; }
+  $("#labelModal").classList.add("hidden");
+  resultStack = [];
+  openProduct({code: labelCode || ("label-" + Date.now()), name: $("#lblName").value.trim() || "Scanned label", brand: labelCode ? "From label · " + labelCode : "From label", ingredients: ing, source:"label"});
+};
+$("#fileLabel").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const st = $("#labelStatus");
+  st.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px"></span> Reading the label…`;
+  // 1) Claude vision if available
+  const sample = await getSample();
+  if (sample){
+    try {
+      const lim = await sample.limits?.();
+      if (!lim || lim.images){
+        const res = await sample.json(`Read this food packaging photo. Extract the full ingredients list exactly as printed (in English if available), the product name if visible, any "may contain" / traces warning exactly as printed, and sugars per 100g if a nutrition table is visible.
+Reply with JSON only: {"product_name": string|null, "ingredients": string|null, "may_contain": string|null, "sugars_100g": number|null, "organic": boolean}`, {images:[f], modelTier:"default"});
+        if (res?.ingredients){
+          $("#lblText").value = res.ingredients + (res.may_contain ? "\nMay contain: " + String(res.may_contain).replace(/^\s*may contain:?\s*/i, "") : "");
+          if (res.product_name && !$("#lblName").value) $("#lblName").value = res.product_name;
+          st.textContent = "Label read. Check the text, then calculate.";
+          return;
+        }
+      }
+    } catch (err) { if (err?.code === "rate_limited"){ st.textContent = "Too many requests. Wait a minute, or paste the ingredients."; return; } }
+  }
+  // 2) on-device OCR
+  try {
+    await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js");
+    const { data } = await withTimeout(Tesseract.recognize(f, "eng"), 60000);
+    let txt = data.text.replace(/\s+/g, " ").trim();
+    const mayM = txt.match(/(may contain|traces? of)[^.]*\.?/i);
+    const m = txt.match(/ingredients?\s*[:\-]?\s*(.+)/i); if (m) txt = m[1];
+    txt = txt.split(/\b(allergy|allergen|nutrition|storage|store in|best before|typical values|may contain)\b/i)[0].trim();
+    if (txt.length < 8) throw new Error("short");
+    $("#lblText").value = txt + (mayM ? "\n" + mayM[0].trim() : "");
+    st.textContent = "Text recognised. Check it and fix any errors, then calculate.";
+  } catch {
+    st.textContent = "We couldn't read the text from this photo here. Type or paste the ingredients instead.";
+  }
+};
+
+/* ---------------- demo chips & settings ---------------- */
+$("#demoChips").innerHTML = DEMO.filter((d,i) => [0,3,5,7,10].includes(i)).map(d => `<button class="chip" data-code="${d.code}">${esc(d.name)}</button>`).join("");
+$("#demoChips").querySelectorAll(".chip").forEach(c => c.onclick = () => { resultStack = []; const d = DEMO.find(x => x.code === c.dataset.code); openProduct({...d, source:"demo"}); });
+const cs = $("#countrySel"); cs.value = store.get("sprig.country", ""); cs.onchange = () => store.set("sprig.country", cs.value);
+
+renderRecent();
+renderSummary();
+checkOnline();
+})();
+</script>
+</body>
+</html>
